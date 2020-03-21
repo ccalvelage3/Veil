@@ -133,7 +133,7 @@ func_check_env(){
   echo -en "     Continue with installation? ([${BOLD}y${RESET}]es/[${BOLD}s${RESET}]ilent/[${BOLD}N${RESET}]o): "
   if [ "${silent}" == "true" ]; then
     echo -e "${GREEN}S${RESET}\n"
-  elseto
+  else
     read -p '' install
     install=$(echo "${install}" | tr '[:upper:]' '[:lower:]')
     echo
