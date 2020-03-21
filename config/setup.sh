@@ -5,6 +5,8 @@
 os="$( awk -F '=' '/^ID=/ {print $2}' /etc/os-release 2>&- )"
 
 if [ "${os}" == "arch" ] \
+|| [ "${os}" == "arcolinux" ] \
+|| [ "${os}" == "manjaro" ] \
 || [ "${os}" == "blackarch" ] \
 || [ "${os}" == "debian" ] \
 || [ "${os}" == "deepin" ] \
@@ -32,12 +34,16 @@ fi
 
 userprimarygroup="$( id -Gn "${trueuser}" | cut -d' ' -f1 )"
 arch="$( uname -m )"
-if [ "${os}" == "\"void\"" ]; then
+if [ "${os}" == "\"void\"" ] \
+if [ "${os}" == "manjaro" ] \
+if [ "${os}" == "arcolinux" ]; then
   osversion="$(uname -r)"
 else
   osversion="$( awk -F '=' '/^VERSION_ID=/ {print $2}' /etc/os-release 2>&- | sed 's/"//g' )"
 fi
-if [ "${os}" == "\"void\"" ]; then
+if [ "${os}" == "\"void\"" ] \
+if [ "${os}" == "manjaro" ] \
+if [ "${os}" == "arcolinux" ]; then
   osmajversion="$(uname -a | cut -f3 -d\ | cut -f-2 -d.)"
 else
   osmajversion="$( awk -F '["=]' '/^VERSION_ID=/ {print $3}' /etc/os-release 2>&- | cut -d'.' -f1 )"
@@ -127,7 +133,7 @@ func_check_env(){
   echo -en "     Continue with installation? ([${BOLD}y${RESET}]es/[${BOLD}s${RESET}]ilent/[${BOLD}N${RESET}]o): "
   if [ "${silent}" == "true" ]; then
     echo -e "${GREEN}S${RESET}\n"
-  else
+  elseto
     read -p '' install
     install=$(echo "${install}" | tr '[:upper:]' '[:lower:]')
     echo
@@ -369,8 +375,8 @@ func_package_deps(){
       echo -e " ${RED}[ERROR] ${msg}${RESET}\n"
     fi
 
-  elif [ "${os}" == "blackarch" ]; then
-    sudo pacman -Sy ${arg} --needed mingw-w64-binutils mingw-w64-crt mingw-w64-gcc mingw-w64-headers mingw-w64-winpthreads \
+  elif [ "${os}" == "blackarch" ];then
+     sudo pacman -Sy ${arg} --needed mingw-w64-binutils mingw-w64-crt mingw-w64-gcc mingw-w64-headers mingw-w64-winpthreads \
       mono mono-tools mono-addins python2-pip wget unzip ruby python python2 python-crypto gcc-go ca-certificates base-devel python-pip krb5 samba
     if [[ "$?" -ne "0" ]]; then
       msg="Failed with installing dependencies (4): $?"
@@ -386,7 +392,9 @@ func_package_deps(){
       echo -e " ${RED}[ERROR] ${msg}${RESET}\n"
     fi
 
-  elif [ "${os}" == "arch" ]; then
+  elif [ "${os}" == "arch" ] \
+  || [ "${os}" == "manjaro" ] \
+  || [ "${os}" == "arcolinux" ]; then
     AUR_packages()
     {
       if [ $1 == 'yay' ]; then
@@ -421,7 +429,7 @@ func_package_deps(){
       AUR_packages "yay"
       echo -e "\n\n [?] ${BOLD}Yay has been installed to install some dependencies.${RESET}\n"
       echo -en "     Do you want to keep yay installed? ([${BOLD}y${RESET}]es/[${BOLD}s${RESET}]ilent/[${BOLD}N${RESET}]o): "
-      
+
       if [ "${keepyay} == 'y'" ] \
       || [ "${keepyay} == 'yes'" ]; then
         echo -e "\n\n ${GREN}yay will remain installed on your system. \n"
@@ -589,7 +597,9 @@ func_package_deps(){
       echo -e " ${RED}[ERROR] ${msg}${RESET}\n"
     fi
   elif [ "${os}" == "arch" ] \
-  || [ "${os}" == "blackarch" ]; then
+  || [ "${os}" == "blackarch" ] \
+  || [ "${os}" == "manjaro" ] \
+  || [ "${os}" == "arcolinux" ]; then
     echo -e "\n\n [*] ${YELLOW}Installing Wine 32-bit on x86_64 System (via PACMAN)${RESET}\n"
     if grep -Fxq "#[multilib]" /etc/pacman.conf; then
       echo "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
@@ -726,7 +736,7 @@ func_python_deps(){
 
   ## Install (Wine) Python extra setup files (PyWin32 & PyCrypto)
   for FILE in pywin32-220.win32-py3.4.exe pycrypto-2.6.1.win32-py3.4.exe; do
-    echo -e "\n\n [*] ${YELLOW}Installing (Wine) Python's ${FILE}...${RESET}\n"
+    echo -e "\n\n [*] ${YELLOW}Installing (Wine) Pythons ${FILE}...${RESET}\n"
     echo -e " [*] ${BOLD} Next -> Next -> Next -> Finished! ...Overwrite if prompt (use default values)${RESET}\n"
     sleep 1s
 
@@ -763,7 +773,7 @@ func_python_deps(){
   popd >/dev/null
 
   ## Install Python (OS) extra setup files (PyInstaller)
-  echo -e "\n\n [*] ${YELLOW}Installing (OS) Python's PyInstaller (via TAR)${RESET}\n"
+  echo -e "\n\n [*] ${YELLOW}Installing (OS) Pythons PyInstaller (via TAR)${RESET}\n"
   if [ "${force}" == "false" ] \
   && [ -f "${veildir}/PyInstaller-3.2.1/pyinstaller.py" ]; then
     echo -e "\n\n [*] ${YELLOW}PyInstaller v3.2 is already installed... Skipping...${RESET}\n"
@@ -783,8 +793,8 @@ func_python_deps(){
   fi
 
   ## Use wine based pip to install dependencies
-  echo -e "\n\n [*] ${YELLOW}Installing (Wine) Python's PIP pefile${RESET}\n"
-  sudo -u "${trueuser}" WINEPREFIX="${winedir}" wine "${winedir}/drive_c/Python34/python.exe" "-m" "pip" "install" "--upgrade" "pip==19.1.*"
+  echo -e "\n\n [*] ${YELLOW}Installing (Wine) Pythons PIP pefile${RESET}\n"
+  sudo -u "${trueuser}" WINEPREFIX="${winedir}" wine "${winedir}/drive_c/Python34/python.exe" "-m" "pip" "install" "--upgrade" "pip"
   tmp="$?"
   if [[ "${tmp}" -ne "0" ]]; then
     msg="Failed to run (wine) Python pip... Exit code: ${tmp}"
@@ -1036,6 +1046,10 @@ else
   os="$( awk -F '["=]' '/^ID=/ {print $2}' /etc/os-release 2>&- | cut -d'.' -f1 )"
   if [ "${os}" == "arch" ]; then
     echo -e " [I] ${YELLOW}Arch Linux ${arch} detected...${RESET}\n"
+  elif [ "${os}" == "arcolinux" ]; then
+    echo -e " [I] ${YELLOW}arcolinux Linux ${arch} detected...${RESET}\n"
+  elif [ "${os}" == "arcolinux" ]; then
+    echo -e " [I] ${YELLOW}arcolinux Linux ${arch} detected...${RESET}\n"
   elif [ "${os}" == "blackarch" ]; then
     echo -e " [I] ${YELLOW}BlackArch Linux ${arch} detected...${RESET}\n"
   elif [ "${os}" == "debian" ]; then
